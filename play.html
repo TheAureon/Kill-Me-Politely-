@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Please Kill Me (Politely)</title>
+  <style>
+:root {
+  --bg: #1d1a24; --panel: #2a2633; --card: #343041; --line: #4a4558;
+  --text: #ece6d9; --muted: #a49cb3; --gold: #d4af37; --red: #b33a3a; --green: #4f9a4f;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 Georgia, "Times New Roman", serif; }
+h2, h3 { margin: .3em 0; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.fear { color: #e59a8a; }
+
+/* Top bar */
+.topbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 8px 16px; background: #15121b; border-bottom: 2px solid var(--line); }
+.logo { font-size: 20px; font-weight: bold; color: var(--gold); }
+.logo span { color: var(--muted); font-weight: normal; }
+.resources { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+.chip { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 2px 9px; font-size: 13px; }
+.topbtns { display: flex; gap: 6px; }
+
+.narrator { margin: 10px 16px; padding: 10px 14px; background: #120f17; border-left: 4px solid var(--gold); font-style: italic; min-height: 22px; }
+.narrator.flash { animation: flash .6s; }
+@keyframes flash { from { background: #3a3220; } to { background: #120f17; } }
+
+/* Buttons */
+.btn { background: #4a4360; color: var(--text); border: 1px solid #6a6283; border-radius: 6px; padding: 7px 14px; font: inherit; cursor: pointer; }
+.btn:hover:not(:disabled) { background: #5c5476; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn.sm { padding: 3px 9px; font-size: 13px; }
+.btn.big { padding: 11px 20px; font-size: 17px; }
+.btn.red, .btn.danger { background: var(--red); border-color: #d25555; }
+.btn.ghost { background: transparent; }
+
+/* Screens */
+.screen { display: none; padding: 0 16px 24px; }
+.screen.active { display: block; }
+.screenhead { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 10px; }
+.screenhead h2 { flex: 1; min-width: 200px; }
+
+/* Hub */
+.hubhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.youbox { display: flex; gap: 12px; align-items: center; background: var(--panel); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); }
+.bigbtns { display: flex; gap: 10px; flex-wrap: wrap; }
+.hubgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 860px) { .hubgrid { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.tab { background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 6px 6px 0 0; padding: 6px 10px; cursor: pointer; font: inherit; font-size: 14px; }
+.tab.on { background: var(--card); color: var(--text); border-bottom-color: var(--card); }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start; }
+.card .btn { margin-top: 6px; }
+.cname { font-weight: bold; font-size: 16px; }
+.champinfo { flex: 1; min-width: 0; }
+.stats { font-size: 13px; margin: 3px 0; }
+.injrow, .gifts { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
+.inj { background: #5a2b2b; border-radius: 4px; padding: 1px 6px; font-size: 12px; }
+.gift { background: #2f3f2a; border-radius: 4px; padding: 1px 6px; font-size: 12px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 5px; }
+.gicon { font-size: 34px; width: 50px; text-align: center; }
+.tag { display: inline-block; background: #4a4558; border-radius: 4px; padding: 0 6px; font-size: 12px; font-weight: normal; }
+.tag.red { background: #7a2f2f; } .tag.green { background: #2f6a2f; }
+
+/* Durability meter */
+.dbar { position: relative; height: 12px; background: #1a1720; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin-top: 6px; }
+.dfill { height: 100%; background: #5bbf5b; transition: width .6s; }
+.dlost { position: absolute; top: 0; height: 100%; background: repeating-linear-gradient(45deg, #3a2222, #3a2222 4px, #2a1818 4px, #2a1818 8px); }
+.dcap { position: absolute; top: 0; height: 100%; width: 2px; background: #fff; }
+.dlabel { font-size: 12px; color: var(--muted); }
+.dbar.mini { height: 6px; width: 90px; }
+.dbar.home { height: 14px; margin: 6px 0 10px; }
+
+/* Drawings */
+.fig { display: block; flex-shrink: 0; }
+.regen { animation: regen 1.6s infinite; } .regen.d2 { animation-delay: .5s; } .regen.d3 { animation-delay: 1s; }
+@keyframes regen { 0% { opacity: 0; transform: translateY(6px); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
+
+/* Modal */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 50; padding: 20px; overflow: auto; }
+.modal.open { display: flex; align-items: flex-start; justify-content: center; }
+.modal-body { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; max-width: 640px; width: 100%; margin-top: 30px; }
+.row { display: flex; gap: 14px; align-items: flex-start; }
+.injlist { flex: 1; padding-left: 18px; } .injlist li { margin-bottom: 6px; }
+.sev { font-size: 11px; padding: 0 5px; border-radius: 4px; } .sev.s1 { background: #6a5a2a; } .sev.s2 { background: #7a3f2a; } .sev.s3 { background: #8a2222; }
+.journal { max-height: 60vh; overflow: auto; margin-bottom: 10px; }
+.jentry { border-bottom: 1px solid var(--line); padding: 8px 0; }
+.jentry.win { background: #2d3a22; }
+.lesson { color: #f0d890; font-size: 14px; margin-top: 3px; }
+
+/* Bog */
+.bogmap { position: relative; height: 560px; border-radius: 10px; border: 2px solid #3a4a2a; overflow: hidden;
+  background: radial-gradient(ellipse at 30% 40%, #3f5a35 0, transparent 40%), radial-gradient(ellipse at 70% 70%, #2f4a3a 0, transparent 35%),
+              radial-gradient(ellipse at 60% 20%, #24384a 0, transparent 20%), #2b3a26; }
+.node { position: absolute; transform: translate(-50%, -50%); background: rgba(0,0,0,.25); border: 1px dashed rgba(255,255,255,.25); border-radius: 50%;
+  font-size: 26px; width: auto; min-width: 54px; height: auto; padding: 6px; cursor: pointer; color: var(--text); display: flex; flex-direction: column; align-items: center; }
+.node span { font-size: 11px; font-family: Georgia, serif; white-space: nowrap; }
+.node:hover { background: rgba(255,255,255,.12); }
+.node.boss { border-color: #a33; } .node.done { opacity: .45; }
+.node.toad { border-color: #6c6; border-radius: 30%; }
+.bog-hero { position: absolute; transform: translate(-50%, -50%); font-size: 30px; transition: left .6s, top .6s; pointer-events: none; z-index: 5; filter: drop-shadow(0 0 6px #7cff8a); }
+
+/* Setup */
+.picks { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.pick { display: flex; gap: 10px; align-items: center; text-align: left; background: var(--card); color: var(--text); border: 2px solid var(--line); border-radius: 8px; padding: 10px 14px; cursor: pointer; font: inherit; max-width: 300px; }
+.pick.on { border-color: var(--gold); box-shadow: 0 0 10px #d4af3766; }
+
+/* Arena */
+.stage { position: relative; height: 300px; border-radius: 10px; border: 2px solid var(--line); overflow: hidden; margin-bottom: 10px; }
+.arena-pit { background: linear-gradient(#4a3a5a 0 40%, #5a4630 40%); }
+.arena-dunes { background: linear-gradient(#e3a34a 0 40%, #d8b36a 40%); }
+.arena-library { background: linear-gradient(#2a1d14 0 40%, #4a3424 40%); }
+.pick.arena-pit, .pick.arena-dunes, .pick.arena-library { color: #fff; text-shadow: 0 1px 2px #000; }
+.puddle { position: absolute; background: #5a7aa8; border-radius: 50%; opacity: .7; height: 16px; }
+.puddle.p1 { left: 30%; bottom: 30px; width: 90px; } .puddle.p2 { left: 55%; bottom: 14px; width: 60px; }
+.sun { position: absolute; right: 30px; top: 10px; font-size: 44px; }
+.shelf { position: absolute; bottom: 60px; width: 40px; height: 150px; background: repeating-linear-gradient(#5a3a22 0 6px, #8a4a3a 6px 26px, #3a6a5a 26px 38px, #5a3a22 38px 44px); border: 2px solid #3a2414; transform-origin: bottom right; transition: transform .6s ease-in; }
+.shelf.s1 { left: 6%; } .shelf.s2 { right: 3%; }
+.shelf.topple { transform: rotate(60deg); }
+.chand { position: absolute; z-index: 3; top: 0; transform: translateX(-50%); font-size: 18px; transition: top .45s ease-in; }
+.chand::before { content: ''; position: absolute; left: 50%; bottom: 100%; height: 30px; width: 2px; background: #888; }
+.chand.fall { top: 170px; }
+.chand.fall::before { display: none; }
+.stands { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; opacity: .8; }
+.actor { position: absolute; bottom: 20px; transition: transform .3s; }
+.champ-actor { left: 22%; } .hero-actor { left: 60%; }
+.lunge { animation: lunge .6s; }
+@keyframes lunge { 50% { transform: translateX(80px); } }
+.tink { animation: tink .6s; }
+@keyframes tink { 50% { filter: brightness(1.8) drop-shadow(0 0 8px #fff); } }
+.knock { animation: knock .9s forwards; }
+@keyframes knock { 30% { transform: translateX(90px); } 100% { transform: translateX(-140px) rotate(-80deg); } }
+.collapse { animation: collapse .9s forwards; }
+@keyframes collapse { 100% { transform: translateY(30px) rotate(-90deg); } }
+.down { animation: down 1.2s forwards; }
+@keyframes down { 100% { transform: translateY(40px) rotate(90deg); } }
+.fightlog { background: #120f17; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; max-height: 340px; overflow: auto; }
+.logline { padding: 4px 0; border-bottom: 1px dotted #333; animation: fadein .4s; }
+.logline.big { font-size: 16px; color: #ffd27a; }
+.logline.win { font-size: 20px; color: #9f9; }
+@keyframes fadein { from { opacity: 0; } }
+.result { padding: 8px 0; }
+.retire { margin-top: 10px; padding: 10px; background: #2c2440; border-left: 4px solid #9a7bd0; }
+
+/* Ending */
+#screen-ending.active { position: fixed; inset: 0; z-index: 40; background: #000; padding: 0; }
+.ending { position: absolute; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; color: #ddd; }
+.savetext { font-family: monospace; font-size: 22px; }
+.crt { width: 100%; height: 100%; background: #ddd; animation: crt 1.2s forwards; }
+@keyframes crt { 40% { transform: scale(1, .004); } 80% { transform: scale(.01, .004); } 100% { transform: scale(0, 0); } }
+.credits { position: absolute; inset: 0; overflow: auto; text-align: center; padding: 40px 16px; }
+.credits .roll { max-width: 560px; margin: 0 auto; animation: fadein 2s; }
+.credits ul { list-style: none; padding: 0; }
+.credits h1 { color: var(--gold); }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">☠️ Please Kill Me <span>(Politely)</span></div>
+    <div id="resources" class="resources"></div>
+    <div class="topbtns">
+      <button class="btn sm" onclick="showJournal()">📖 Journal</button>
+      <button class="btn sm" onclick="showIntro()">❔ Help</button>
+      <button class="btn sm ghost" onclick="confirmReset()">Reset</button>
+    </div>
+  </header>
+
+  <div id="narrator" class="narrator"></div>
+
+  <!-- HUB -->
+  <main id="screen-hub" class="screen">
+    <div class="hubhead">
+      <div class="youbox">
+        <div id="hub-hero"></div>
+        <div>
+          <div class="cname">You. The Unkillable.</div>
+          <div class="small">❤️ 99,999 / 99,999 · 🛡️ Best armor · ✨ Regen (always on) · 🌵 Thorns<br>
+          🩹 Curse of Duct Tape: nothing comes off. 🚫 You never attack.</div>
+        </div>
+      </div>
+      <div class="bigbtns">
+        <button class="btn big" onclick="goBog()">🌿 Go to the Bog</button>
+        <button class="btn big red" id="stage-btn" onclick="goArenaSetup()">⚔️ Stage an Attempt</button>
+      </div>
+    </div>
+    <div class="hubgrid">
+      <section id="roster" class="panel"></section>
+      <section class="panel">
+        <div class="tabs">
+          <button class="tab" data-tab="recruit" onclick="setTab('recruit')">📋 Recruit Board</button>
+          <button class="tab" data-tab="craft" onclick="setTab('craft')">🔨 Craft Bench</button>
+          <button class="tab" data-tab="build" onclick="setTab('build')">🏗️ Buildings</button>
+          <button class="tab" data-tab="home" onclick="setTab('home')">🏚️ Retirement Home</button>
+        </div>
+        <div id="tabbody"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- BOG -->
+  <main id="screen-bog" class="screen">
+    <div class="screenhead">
+      <h2>🌿 The Whispering Bog</h2>
+      <span class="small">Click things to gather them. The Hollow has a boss. The toad is hungry.</span>
+      <button class="btn" onclick="leaveBog()">🏠 Return to Village</button>
+    </div>
+    <div id="bogmap" class="bogmap"><div id="bog-hero" class="bog-hero">🛡️</div></div>
+  </main>
+
+  <!-- ARENA SETUP -->
+  <main id="screen-setup" class="screen">
+    <div class="screenhead">
+      <h2>⚔️ Stage an Attempt</h2>
+      <button class="btn" onclick="goHub()">Back</button>
+    </div>
+    <h3>Who tries?</h3>
+    <div id="setup-champs" class="picks"></div>
+    <h3>Where?</h3>
+    <div id="setup-arenas" class="picks"></div>
+    <button class="btn big red" onclick="startAttempt()">Begin. (You will not fight back.)</button>
+  </main>
+
+  <!-- ARENA FIGHT -->
+  <main id="screen-arena" class="screen">
+    <div class="screenhead">
+      <h2 id="fight-title"></h2>
+      <button class="btn" id="fight-skip" onclick="skipFight()">Skip ⏩</button>
+      <button class="btn big" id="fight-next" onclick="leaveArena()">Back to Village</button>
+    </div>
+    <div id="stage" class="stage"></div>
+    <div id="fightlog" class="fightlog"></div>
+  </main>
+
+  <!-- ENDING -->
+  <main id="screen-ending" class="screen"><div id="ending" class="ending"></div></main>
+
+  <div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div id="modal-body" class="modal-body"></div></div>
+
+  <script>
+// All game content lives here. Edit numbers and text freely.
+
+const RESOURCES = {
+  bogiron:    { name: 'Bog Iron',        icon: '⛓️' },
+  mossthread: { name: 'Mossthread',      icon: '🧵' },
+  glowcap:    { name: 'Glowcap',         icon: '🍄' },
+  bonedust:   { name: 'Bonedust',        icon: '🦴' },
+  glasseye:   { name: "Hag's Glass Eye", icon: '👁️', rare: true },
+};
+
+// ---------- Champions ----------
+const ARCHETYPES = {
+  barbarian: {
+    title: 'Reckless Barbarian', color: '#b5523b', origin: 'Gutrot War Camp',
+    first: ['Brakka', 'Gorla', 'Thudd', 'Marrow', 'Krusk'],
+    last: ['the Loud', 'Skullfirst', 'No-Plan', 'Twice-Swung', 'of the Big Swing'],
+    durability: [95, 115], power: 9, agility: 3, stamina: 6,
+    likes: ['greatsword'], fears: ['monocle'],
+    personality: 'Hits first. Thinks never. Extremely tough.',
+    fearText: 'Distrusts anything "sneaky". Will not wear a monocle.',
+  },
+  archer: {
+    title: 'Nervous Archer', color: '#4f8a4a', origin: 'Thimbleford Village',
+    first: ['Pip', 'Wren', 'Tansy', 'Dewey', 'Moss'],
+    last: ['Wobbleton', 'Halfdraw', 'Flinchley', 'Quiverknees', 'Pardonme'],
+    durability: [35, 45], power: 3, agility: 7, stamina: 4, ranged: true,
+    likes: ['bow', 'monocle'], fears: ['greatsword'],
+    personality: 'Brilliant shot. Apologises to targets. Very fragile.',
+    fearText: 'Refuses to go within sword range of you. Will not take a greatsword.',
+  },
+  paladin: {
+    title: 'Sleepy Paladin', color: '#8a8fa8', origin: 'Monastery of the Long Nap',
+    first: ['Sir Dozewell', 'Dame Yawnsley', 'Sir Snorris', 'Dame Lull', 'Sir Restmore'],
+    last: ['the Drowsy', 'of the Snooze', 'Heavyeyes', 'the Recumbent', 'Pillowborn'],
+    durability: [75, 90], power: 6, agility: 2, stamina: 3, heavy: true,
+    likes: ['tonic'], fears: ['boots'],
+    personality: 'Sturdy, devout, permanently tired. Wears a lot of armor.',
+    fearText: 'Fears footwear that implies effort. Will not wear boots.',
+  },
+  summoner: {
+    title: 'Show-off Summoner', color: '#8b4fb0', origin: 'The Glitter Spire',
+    first: ['Vexa', 'Lumina', 'Zaz', 'Orlo', 'Celestine'],
+    last: ['the Magnificent', 'Sparkhand', 'the Adored', 'Encore', 'the Unforgettable'],
+    durability: [50, 60], power: 4, agility: 5, stamina: 5, summoner: true,
+    likes: ['bow', 'greatsword'], fears: ['tonic'],
+    personality: 'Summons an imp for every occasion. Lives for applause.',
+    fearText: "Won't drink anything not named after her. Refuses tonics.",
+  },
+};
+
+// ---------- Gifts ----------
+const GIFTS = {
+  greatsword: {
+    name: 'Greatsword of Overcommitment', icon: '🗡️',
+    cost: { bogiron: 3, bonedust: 1 },
+    desc: '+4 power. Heavy: tires the wielder faster. Hits harder, so it reflects harder.',
+  },
+  boots: {
+    name: 'Featherweight Boots', icon: '👢',
+    cost: { mossthread: 3 },
+    desc: '+4 agility. Fewer trips and slips. Much more speed. Possibly too much speed.',
+  },
+  tonic: {
+    name: 'Bottomless Stamina Tonic', icon: '🧪',
+    cost: { glowcap: 2, bonedust: 1 },
+    desc: '+6 stamina for one attempt (used up). Strong stuff. Muscles may object.',
+    consumable: true,
+  },
+  bow: {
+    name: 'Bow of Ricochet', icon: '🏹',
+    cost: { mossthread: 2, bogiron: 1 },
+    desc: 'Makes the wielder ranged. Arrows bounce off things. Including you. Back at them.',
+  },
+  monocle: {
+    name: 'Monocle of Questionable Angles', icon: '🧐',
+    cost: { glasseye: 1, glowcap: 1 },
+    desc: "Lets the wearer see angles that don't involve hitting you directly. Needs a Hag's Glass Eye.",
+  },
+};
+
+// ---------- Arenas ----------
+const ARENAS = {
+  pit:     { name: 'The Muddy Pit',      desc: 'Puddles everywhere. Very slippery.' },
+  dunes:   { name: 'The Scorching Dunes', desc: 'Hot. Heavy armor turns into an oven.' },
+  library: { name: 'The Overdue Library', desc: 'Tall shelves. Two chandeliers. One of them is right above you.' },
+};
+
+// ---------- Injuries ----------
+// sev: 1 minor, 2 serious, 3 severe. Each injury permanently lowers how far a champion can be healed.
+const INJURIES = {
+  blackEye:    { name: 'Black eye',           sev: 1, detail: 'Swollen shut. Looks worse than it is. Slightly.' },
+  singed:      { name: 'Burns',               sev: 1, detail: 'Eyebrows gone. Hair mostly gone. Dignity entirely gone.' },
+  headBandage: { name: 'Head wound',          sev: 2, detail: 'Concussed. Keeps asking what year it is.' },
+  armCast:     { name: 'Broken arm',          sev: 2, detail: 'In a cast. Hits for less.' },
+  sling:       { name: 'Dislocated shoulder', sev: 2, detail: 'In a sling. Pops back out when sneezing.' },
+  neckBrace:   { name: 'Whiplash',            sev: 2, detail: 'Neck brace. Can only look straight ahead, which is where you are.' },
+  cane:        { name: 'Wrecked knee',        sev: 2, detail: 'Walks with a cane. Moves slower.' },
+  legCast:     { name: 'Broken leg',          sev: 3, detail: 'Full leg cast. Limps. Moves much slower.' },
+  eyepatch:    { name: 'Lost eye',            sev: 3, detail: 'Eyepatch. Aiming is now mostly guessing.' },
+};
+
+// ---------- Failure types ----------
+// Each failed attempt picks one of these. "lesson" is what the knockout journal teaches.
+const FAILURES = {
+  thorns: {
+    name: 'Thorns Reflection', cat: 'Thorns', dmg: 8,
+    injuries: ['headBandage', 'armCast', 'blackEye'],
+    lines: [
+      '{n} puts everything into one mighty swing. Your thorns put everything back.',
+      '{n} hits you very, very hard. Then {n} hits the floor very, very hard.',
+    ],
+    lesson: 'Harder hits reflect harder. More power just means a bigger knockout. For them.',
+  },
+  ricochet: {
+    name: 'Ricochet', cat: 'Thorns', dmg: 14,
+    injuries: ['eyepatch', 'sling', 'blackEye'],
+    lines: [
+      '{n} looses an arrow. It strikes your pauldron, considers its options, and returns home.',
+      'The arrow bounces off your thorns and goes straight back the way it came. Punctual.',
+    ],
+    lesson: 'Ranged shots bounce off you. Maybe aim at something that is not you?',
+  },
+  grab: {
+    name: 'Grabbed the Thorns', cat: 'Thorns', dmg: 10,
+    injuries: ['armCast', 'sling'],
+    lines: ['{n} tries to wrestle you to the ground. You are, regrettably, covered in spikes.'],
+    lesson: 'Grabbing you hurts. A lot. Nobody should touch you, which is sort of the problem.',
+  },
+  swordSlip: {
+    name: 'Fell on Your Sword', cat: 'Your Gear', dmg: 18,
+    injuries: ['sling', 'headBandage', 'armCast'],
+    lines: [
+      '{n} slips and falls onto your sword. You did not move it. You cannot move it. It is taped on.',
+    ],
+    lesson: 'Clumsy champions plus slippery floors plus your sword is a bad combination. Better footwear helps.',
+  },
+  capeTrip: {
+    name: 'Tripped on Your Cape', cat: 'Your Gear', dmg: 12,
+    injuries: ['legCast', 'blackEye', 'cane'],
+    lines: ['{n} steps on your duct-taped cape mid-charge and plants their face firmly in the floor.'],
+    lesson: 'Low agility trips on the cape. Something for the feet might help.',
+  },
+  armorBounce: {
+    name: 'Bounced Off Your Armor', cat: 'Your Gear', dmg: 10,
+    injuries: ['neckBrace', 'legCast', 'headBandage'],
+    lines: [
+      '{n} charges at a speed the boots are very proud of, hits your breastplate, and leaves at the same speed in the opposite direction. The wall stops them.',
+    ],
+    lesson: 'Speed solves tripping, then turns them into a projectile. Your armor is not a door.',
+  },
+  exhaustion: {
+    name: 'Exhaustion', cat: 'Exhaustion', dmg: 8,
+    injuries: ['cane', 'neckBrace'],
+    lines: [
+      '{n} keeps at it until your regen wins on points. They collapse in a heap of their own equipment.',
+      '{n} runs out of stamina. Your health bar has not noticed anything happened.',
+    ],
+    sleepyLines: [
+      '{n} sits down "just for a second" and falls asleep in full armor. They have to be carried out by four people.',
+    ],
+    lesson: 'You heal faster than they can tire. More stamina, or less heavy stuff.',
+  },
+  overheat: {
+    name: 'Overheated', cat: 'Exhaustion', dmg: 16,
+    injuries: ['singed', 'cane', 'headBandage'],
+    lines: ['In the desert heat, {n} gently cooks inside their own armor until they tip over, steaming.'],
+    lesson: 'Desert plus heavy gear makes soup. Pick a cooler arena or carry less.',
+  },
+  shelf: {
+    name: 'Falling Bookshelf', cat: 'Environment', dmg: 18,
+    injuries: ['armCast', 'headBandage', 'legCast'],
+    lines: ['A bookshelf, unsettled by all the shouting, leans over and commits. It lands on {n}. Not on you. Never on you.'],
+    lesson: 'Heavy things fall in libraries. And falling things do not care about thorns...',
+  },
+  chandelier: {
+    name: 'Chandelier', cat: 'Environment', dmg: 25,
+    injuries: ['neckBrace', 'legCast', 'headBandage'],
+    lines: [
+      "{n}'s arrow ricochets off you and snaps the chain of the chandelier above {n}. The chandelier falls on {n}. The chandelier above YOU watches, unused, full of potential.",
+    ],
+    lesson: 'The chandelier ignored thorns completely. If only someone could see an angle to the one above you, and aim at it on purpose.',
+  },
+  summonBetrayal: {
+    name: 'Summon Betrayal', cat: 'Self-Sabotage', dmg: 16,
+    injuries: ['singed', 'eyepatch', 'blackEye'],
+    lines: [
+      '{n} summons a magnificent imp. The imp looks at you. The imp looks at {n}. The imp makes the sensible choice.',
+    ],
+    lesson: 'Summons side with whoever is winning. That is always you.',
+  },
+  tornMuscle: {
+    name: 'Torn Muscle', cat: 'Self-Sabotage', dmg: 15,
+    injuries: ['legCast', 'cane', 'sling'],
+    lines: [
+      "The buff surges through {n}. {n}'s hamstring, which was not consulted, resigns effective immediately.",
+    ],
+    lesson: 'Big buffs on bodies not built for them tear things. Match the gift to the champion.',
+  },
+  toad: {
+    name: 'The Toad You Fed', cat: 'Self-Sabotage', dmg: 12,
+    injuries: ['neckBrace', 'legCast'],
+    lines: ['The Bog Toad you have been feeding arrives, now the size of a barn, and sits on {n}. It looks at you fondly.'],
+    lesson: 'Feeding monsters has consequences. They grow. They wander. They sit on people.',
+  },
+};
+
+// ---------- Retirement roles ----------
+const ROLES = {
+  healer:     { name: 'Hospital Healer',  effect: 'Hospital heals +10 more.' },
+  instructor: { name: 'Academy Instructor', effect: 'New recruits get +1 power (+2 with Academy).' },
+  bartender:  { name: 'Bartender',        effect: 'New recruits get +8 durability. Liquid courage.' },
+  shopkeeper: { name: 'Shopkeeper',       effect: '+1 random resource every bog trip.' },
+  veteran:    { name: 'Bitter Veteran',   effect: 'Warns champions: +1 stamina per attempt.' },
+  heckler:    { name: 'Arena Heckler',    effect: 'Sits in the stands and yells. No bonus. Lots of yelling.' },
+  vengeful:   { name: 'Vengeful Survivor', effect: 'Will come back to the recruit board with a grudge (+3 power).' },
+};
+
+const RETIRE_LINES = [
+  '{n} hangs up their weapon. It stays hung up. Unlike you.',
+  '{n} retires to the village. They wave at you with whichever arm still works.',
+  '{n} is done. Their doctor agrees. Their doctor is very firm about it.',
+];
+
+const HECKLES = [
+  '"HIT HIM IN THE CAPE!" yells a heckler from the stands.',
+  'A retiree in the stands holds up a sign: "I WAS YOU ONCE."',
+  '"Bend the knees! BEND THE KNEES!" shouts a heckler with no working knees.',
+  'Someone in the stands throws a cabbage at you. It bounces off your thorns and hits them.',
+];
+
+const HUB_LINES = [
+  'You stand in the village square. The escape key remains broken.',
+  'Your regeneration spell hums. It has never had a day off.',
+  'A child asks why you do not just log off. You do not understand the question.',
+  'The duct tape holds. It always holds.',
+  'Somewhere, a save file waits patiently for you to die.',
+];
+</script>
+  <script>
+// The save file: everything that changes while you play. Saved in the browser automatically.
+
+const SAVE_KEY = 'please-kill-me-politely-v1';
+let S = null;
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function pick(arr) { return arr[rand(arr.length)]; }
+function randInt(a, b) { return a + rand(b - a + 1); }
+function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function newState() {
+  return {
+    res: { bogiron: 3, mossthread: 3, glowcap: 2, bonedust: 1, glasseye: 0 },
+    gifts: {},            // crafted, not yet given: { giftId: count }
+    roster: [],           // active champions
+    board: [],            // recruits waiting on the board
+    retirees: [],
+    journal: [],
+    buildings: { hospital: false, academy: false },
+    toad: 0,
+    trips: 0,
+    attempts: 0,
+    crafted: {},
+    injuriesDealt: 0,
+    recruitedTotal: 0,
+    vengefulQueue: [],
+    won: false,
+    winInfo: null,
+    nextId: 1,
+    seenIntro: false,
+  };
+}
+
+function save() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* no storage: game still works */ }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) { S = JSON.parse(raw); return; }
+  } catch (e) { /* fall through to a new game */ }
+  S = newState();
+  refreshBoard();
+}
+
+function resetGame() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  S = newState();
+  refreshBoard();
+  save();
+}
+
+// ---------- Retiree bonuses ----------
+function roleCount(role) { return S.retirees.filter(r => r.role === role).length; }
+
+// ---------- Recruits ----------
+function makeRecruit(archId, opts) {
+  opts = opts || {};
+  const a = ARCHETYPES[archId];
+  let maxDur = randInt(a.durability[0], a.durability[1]) + roleCount('bartender') * 8 + (S.buildings.academy ? 5 : 0);
+  let power = a.power + roleCount('instructor') * (S.buildings.academy ? 2 : 1);
+  let name = opts.name || (pick(a.first) + ' ' + pick(a.last));
+  if (opts.grudge) { maxDur = 35; power += 3; }
+  return {
+    id: S.nextId++, name, arch: archId,
+    maxDur, cap: maxDur, dur: maxDur,
+    power, agility: a.agility, stamina: a.stamina,
+    injuries: [], gifts: [], attempts: 0, grudge: !!opts.grudge,
+  };
+}
+
+function refreshBoard() {
+  const archs = shuffle(Object.keys(ARCHETYPES)).slice(0, 3);
+  S.board = archs.map(a => makeRecruit(a));
+  // A vengeful retiree comes back for another go
+  if (S.vengefulQueue.length) {
+    const v = S.vengefulQueue.shift();
+    S.board.unshift(makeRecruit(v.arch, { name: v.name + ', Returned', grudge: true }));
+  }
+}
+
+// ---------- Champion helpers ----------
+function topInjuries(ch, n) {
+  return ch.injuries.slice().sort((a, b) => b.sev - a.sev).slice(0, n);
+}
+
+function retireChampion(ch) {
+  S.roster = S.roster.filter(c => c.id !== ch.id);
+  // Pick a role: prefer one nobody has yet
+  const all = Object.keys(ROLES);
+  const unused = all.filter(r => roleCount(r) === 0);
+  const role = pick(unused.length ? unused : all);
+  const retiree = {
+    name: ch.name, arch: ch.arch, role, attempts: ch.attempts,
+    injuries: ch.injuries.slice(), gifts: ch.gifts.slice(),
+  };
+  S.retirees.push(retiree);
+  if (role === 'vengeful' && !ch.grudge) S.vengefulQueue.push({ name: ch.name, arch: ch.arch });
+  return retiree;
+}
+
+function canAfford(cost) {
+  return Object.keys(cost).every(k => (S.res[k] || 0) >= cost[k]);
+}
+function pay(cost) {
+  Object.keys(cost).forEach(k => { S.res[k] -= cost[k]; });
+}
+</script>
+  <script>
+// Shared UI: screens, popups, narrator, and the drawings of people.
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(el => el.classList.toggle('active', el.id === 'screen-' + name));
+  renderResources();
+}
+
+function narrate(text) {
+  const el = $('narrator');
+  el.textContent = text;
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+
+function renderResources() {
+  $('resources').innerHTML = Object.keys(RESOURCES)
+    .filter(k => !RESOURCES[k].rare || S.res[k] > 0)
+    .map(k => `<span class="chip" title="${RESOURCES[k].name}">${RESOURCES[k].icon} ${RESOURCES[k].name}: <b>${S.res[k] || 0}</b></span>`)
+    .join('');
+}
+
+function costText(cost) {
+  return Object.keys(cost).map(k => `${RESOURCES[k].icon}${cost[k]}`).join(' ');
+}
+
+// ---------- Popups ----------
+function openModal(html) {
+  $('modal-body').innerHTML = html;
+  $('modal').classList.add('open');
+}
+function closeModal() { $('modal').classList.remove('open'); }
+
+function showIntro() {
+  openModal(`
+    <h2>Please Kill Me (Politely)</h2>
+    <p>You are the most powerful character in this game. Best armor. Endless health. Regeneration that never stops. Thorns that hurt anyone who hits you.</p>
+    <p>Your escape button is broken. The only way to save and exit is to <b>die</b>.</p>
+    <p>Nothing can kill you. So you will gather materials, craft gifts, and hand them to champions until one of them finally can.</p>
+    <p class="muted">You never attack. You just stand there. It is very awkward for everyone.</p>
+    <p><b>Try this first:</b> recruit someone from the Recruit Board, craft a gift, give it to them, then press <b>Stage an Attempt</b>.</p>
+    <button class="btn big" onclick="closeModal()">Fine. Let's go.</button>`);
+}
+
+function showJournal() {
+  const rows = S.journal.slice().reverse().map(j => `
+    <div class="jentry ${j.win ? 'win' : ''}">
+      <div class="jhead"><b>#${j.n} ${esc(j.champ)}</b> <span class="tag">${j.cat}</span> <span class="muted">${esc(j.arena)}</span></div>
+      <div><b>${esc(j.failure)}.</b> ${esc(j.text)}</div>
+      ${j.injury ? `<div class="muted">Injury: ${esc(j.injury)} · Durability lost: ${j.dmg}</div>` : ''}
+      ${j.gifts ? `<div class="muted">Kit: ${esc(j.gifts)}</div>` : ''}
+      <div class="lesson">📝 ${esc(j.lesson)}</div>
+    </div>`).join('');
+  const cats = {};
+  S.journal.forEach(j => { if (!j.win) cats[j.failure] = (cats[j.failure] || 0) + 1; });
+  const summary = Object.keys(cats).map(k => `${k} ×${cats[k]}`).join(' · ');
+  openModal(`<h2>📖 Knockout Journal</h2>
+    <p class="muted">${S.journal.length ? 'Failure types seen: ' + Object.keys(cats).length + ' of ' + Object.keys(FAILURES).length + '. ' + summary : 'No attempts yet. The pages are hopeful.'}</p>
+    <div class="journal">${rows}</div>
+    <button class="btn" onclick="closeModal()">Close</button>`);
+}
+
+function showInjuries(id) {
+  const ch = S.roster.find(c => c.id === id) || S.retirees[id - 100000];
+  const list = ch.injuries.length
+    ? ch.injuries.map(i => `<li><b>${esc(i.name)}</b> <span class="sev s${Math.min(i.sev, 3)}">severity ${i.sev}</span><br><span class="muted">${esc(i.detail)}</span></li>`).join('')
+    : '<li class="muted">No injuries. Yet.</li>';
+  openModal(`<h2>🩹 ${esc(ch.name)}: Medical Chart</h2>
+    <div class="row">${figureSVG(ch, 120)}<ul class="injlist">${list}</ul></div>
+    <p class="muted">Each injury permanently lowers how far healers can restore durability.</p>
+    <button class="btn" onclick="closeModal()">Close</button>`);
+}
+
+// ---------- Drawings ----------
+// A champion with their worst 2-3 injuries drawn on.
+function figureSVG(ch, height) {
+  const a = ARCHETYPES[ch.arch];
+  const inj = new Set(topInjuries(ch, 3).map(i => i.id));
+  const skin = '#e8c39e';
+  let hat = '';
+  if (ch.arch === 'barbarian') hat = `<path d="M20 12 L14 2 L22 9 Z M40 12 L46 2 L38 9 Z" fill="#eee"/><rect x="20" y="8" width="20" height="5" fill="#6b4a2b"/>`;
+  if (ch.arch === 'archer') hat = `<path d="M19 16 Q30 -2 41 16 Z" fill="#2f5a2c"/>`;
+  if (ch.arch === 'paladin') hat = `<rect x="19" y="7" width="22" height="9" rx="3" fill="#b9bdd0"/><rect x="28" y="2" width="4" height="7" fill="#d4af37"/>`;
+  if (ch.arch === 'summoner') hat = `<path d="M18 13 L30 -6 L42 13 Z" fill="#5e2d80"/><circle cx="31" cy="2" r="1.6" fill="#ffd84d"/>`;
+
+  const leftEye = inj.has('eyepatch')
+    ? `<circle cx="26" cy="18" r="3.3" fill="#111"/><line x1="19" y1="14" x2="41" y2="21" stroke="#111" stroke-width="1"/>`
+    : inj.has('blackEye') ? `<circle cx="26" cy="18" r="3" fill="#6a3d8f"/><circle cx="26" cy="18" r="1" fill="#111"/>`
+    : `<circle cx="26" cy="18" r="1.2" fill="#111"/>`;
+
+  let over = '';
+  if (inj.has('headBandage')) over += `<rect x="19" y="11" width="22" height="5" fill="#fafafa" stroke="#ccc" stroke-width=".5"/><circle cx="36" cy="13.5" r="1.3" fill="#c33"/>`;
+  if (inj.has('singed')) over += `<path d="M20 10 l3 -4 l2 4 l3 -5 l2 5 l3 -4 l2 4 l3 -3" stroke="#222" fill="none" stroke-width="1.5"/><circle cx="33" cy="22" r="1.3" fill="#555"/><circle cx="23" cy="45" r="2" fill="#333" opacity=".5"/>`;
+  if (inj.has('neckBrace')) over += `<rect x="23" y="27" width="14" height="6" rx="2" fill="#f2f2f2" stroke="#bbb" stroke-width=".5"/>`;
+  if (inj.has('armCast')) over += `<rect x="40" y="42" width="8" height="15" rx="2" fill="#fafafa" stroke="#bbb" stroke-width=".5"/>`;
+  if (inj.has('sling')) over += `<path d="M24 32 L14 52 L22 52 Z" fill="#fafafa" stroke="#bbb" stroke-width=".5"/>`;
+  if (inj.has('legCast')) over += `<rect x="20" y="70" width="10" height="23" rx="2" fill="#fafafa" stroke="#bbb" stroke-width=".5"/>`;
+  if (inj.has('cane')) over += `<path d="M52 58 Q52 54 48 54" stroke="#6b4a2b" stroke-width="2" fill="none"/><line x1="52" y1="58" x2="52" y2="96" stroke="#6b4a2b" stroke-width="2"/>`;
+
+  let held = '';
+  if (ch.gifts.includes('greatsword')) held += `<rect x="47" y="22" width="3" height="40" fill="#ccd" transform="rotate(15 48 50)"/>`;
+  else if (ch.gifts.includes('bow') || ch.arch === 'archer') held += `<path d="M10 30 Q2 48 10 66" stroke="#7a5230" stroke-width="2" fill="none"/>`;
+  if (ch.gifts.includes('monocle')) held += `<circle cx="34" cy="18" r="3" fill="none" stroke="#d4af37" stroke-width="1"/>`;
+  if (ch.gifts.includes('boots')) held += `<rect x="20" y="88" width="9" height="6" fill="#e6e6ff"/><rect x="31" y="88" width="9" height="6" fill="#e6e6ff"/>`;
+
+  const limp = inj.has('legCast') || inj.has('cane') ? 'rotate(-4 30 90)' : '';
+  return `<svg class="fig" viewBox="-4 -8 64 106" height="${height}" aria-label="${esc(ch.name)}">
+    <g transform="${limp}">
+    <rect x="21" y="62" width="8" height="30" fill="#3d3328"/><rect x="31" y="62" width="8" height="30" fill="#3d3328"/>
+    <rect x="13" y="31" width="7" height="26" rx="3" fill="${a.color}"/><rect x="40" y="31" width="7" height="26" rx="3" fill="${a.color}"/>
+    <rect x="20" y="30" width="20" height="33" rx="3" fill="${a.color}"/>
+    ${ch.arch === 'paladin' ? '<rect x="18" y="30" width="24" height="12" rx="3" fill="#b9bdd0"/>' : ''}
+    <circle cx="30" cy="18" r="10" fill="${skin}"/>
+    ${leftEye}<circle cx="34" cy="18" r="1.2" fill="#111"/>
+    <path d="M26 24 Q30 ${inj.size ? 22 : 26} 34 24" stroke="#5a3a2a" fill="none" stroke-width="1"/>
+    ${hat}${over}${held}
+    </g></svg>`;
+}
+
+// You. The unkillable one.
+function heroSVG(height) {
+  let thorns = '';
+  for (let i = 0; i < 12; i++) {
+    const y = 40 + i * 7;
+    thorns += `<path d="M22 ${y} l-6 3 l6 3 Z" fill="#5a5f6a"/><path d="M78 ${y} l6 3 l-6 3 Z" fill="#5a5f6a"/>`;
+  }
+  return `<svg class="fig hero" viewBox="0 0 100 150" height="${height}" aria-label="You">
+    <path d="M24 38 L10 140 L90 140 L76 38 Z" fill="#8c1d1d"/>
+    <path d="M18 70 L82 110 M82 70 L18 110 M14 125 L86 125" stroke="#c9c9c9" stroke-width="6" opacity=".9"/>
+    ${thorns}
+    <rect x="30" y="100" width="16" height="40" fill="#70757f"/><rect x="54" y="100" width="16" height="40" fill="#70757f"/>
+    <rect x="24" y="38" width="52" height="66" rx="6" fill="#8f96a3" stroke="#5a5f6a" stroke-width="2"/>
+    <rect x="44" y="50" width="12" height="40" fill="#d4af37" opacity=".6"/>
+    <rect x="80" y="40" width="6" height="80" fill="#dfe4ee"/><rect x="74" y="40" width="18" height="5" fill="#d4af37"/>
+    <path d="M76 60 L92 64 M76 70 L92 74" stroke="#c9c9c9" stroke-width="4"/>
+    <rect x="30" y="4" width="40" height="36" rx="10" fill="#8f96a3" stroke="#5a5f6a" stroke-width="2"/>
+    <rect x="36" y="18" width="28" height="5" fill="#222"/>
+    <circle class="regen" cx="20" cy="30" r="3" fill="#7cff8a"/><circle class="regen d2" cx="84" cy="22" r="2.5" fill="#7cff8a"/><circle class="regen d3" cx="50" cy="0" r="2" fill="#7cff8a"/>
+    </svg>`;
+}
+
+function durabilityBar(ch) {
+  const pct = Math.max(0, ch.dur) / ch.maxDur * 100;
+  const capPct = ch.cap / ch.maxDur * 100;
+  const color = pct > 60 ? '#5bbf5b' : pct > 30 ? '#e0b43c' : '#d9534f';
+  return `<div class="dbar" title="Durability ${ch.dur} / ${ch.maxDur} (can heal up to ${ch.cap})">
+    <div class="dfill" style="width:${pct}%;background:${color}"></div>
+    <div class="dcap" style="left:${capPct}%"></div>
+    <div class="dlost" style="left:${capPct}%;width:${100 - capPct}%"></div>
+  </div><div class="dlabel">Durability ${Math.max(0, ch.dur)} / ${ch.maxDur}${ch.cap < ch.maxDur ? ` · heal limit ${ch.cap}` : ''}</div>`;
+}
+</script>
+  <script>
+// The hub village: roster, recruiting, crafting, buildings, retirement home.
+
+const BUILDINGS = {
+  hospital: { name: 'Hospital Wing', icon: '🏥', cost: { bogiron: 2, mossthread: 2 }, desc: 'Heal champions (costs 🍄1). Never fully. Injuries leave marks.' },
+  academy:  { name: 'Academy',       icon: '🎓', cost: { bogiron: 3, bonedust: 2 },  desc: 'New recruits +5 durability. Instructors teach twice as well.' },
+};
+const MAX_ROSTER = 3;
+let hubTab = 'recruit';
+
+function goHub(line) {
+  showScreen('hub');
+  renderHub();
+  narrate(line || pick(HUB_LINES));
+}
+
+function renderHub() {
+  renderResources();
+  renderRoster();
+  renderTab();
+  $('stage-btn').disabled = S.roster.length === 0;
+}
+
+function renderRoster() {
+  const cards = S.roster.map(ch => {
+    const a = ARCHETYPES[ch.arch];
+    const worst = topInjuries(ch, 3).map(i => `<span class="inj">${esc(i.name)}</span>`).join('');
+    const gifts = ch.gifts.map(g => `<span class="gift" title="${esc(GIFTS[g].name)}">${GIFTS[g].icon} ${esc(GIFTS[g].name)}</span>`).join('') || '<span class="muted">No gifts yet</span>';
+    const canHeal = S.buildings.hospital && ch.dur < ch.cap;
+    return `<div class="card champ">
+      <div class="champfig">${figureSVG(ch, 110)}</div>
+      <div class="champinfo">
+        <div class="cname">${esc(ch.name)} ${ch.grudge ? '<span class="tag red">grudge</span>' : ''}</div>
+        <div class="muted">${a.title} · from ${a.origin}</div>
+        ${durabilityBar(ch)}
+        <div class="stats">💪 ${ch.power} · 🤸 ${ch.agility} · 🫁 ${ch.stamina} ${a.ranged ? '· 🏹 ranged' : ''}</div>
+        <div class="injrow">${worst}</div>
+        <div class="gifts">${gifts}</div>
+        <div class="btnrow">
+          <button class="btn sm" onclick="openGiveGift(${ch.id})" ${ch.gifts.length >= 2 ? 'disabled' : ''}>🎁 Give gift (${ch.gifts.length}/2)</button>
+          <button class="btn sm" onclick="showInjuries(${ch.id})">🩹 Injuries (${ch.injuries.length})</button>
+          ${S.buildings.hospital ? `<button class="btn sm" onclick="heal(${ch.id})" ${canHeal ? '' : 'disabled'}>🏥 Heal (🍄1)</button>` : ''}
+        </div>
+      </div></div>`;
+  }).join('');
+  $('roster').innerHTML = `<h3>Your Champions (${S.roster.length}/${MAX_ROSTER})</h3>` +
+    (cards || '<p class="muted">Nobody. Visit the Recruit Board. Someone out there is foolish enough.</p>');
+}
+
+function setTab(t) { hubTab = t; renderTab(); }
+
+function renderTab() {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === hubTab));
+  const el = $('tabbody');
+  if (hubTab === 'recruit') el.innerHTML = recruitHTML();
+  if (hubTab === 'craft') el.innerHTML = craftHTML();
+  if (hubTab === 'build') el.innerHTML = buildHTML();
+  if (hubTab === 'home') el.innerHTML = homeHTML();
+}
+
+function giftName(id) { return GIFTS[id].icon + ' ' + GIFTS[id].name; }
+
+function recruitHTML() {
+  const full = S.roster.length >= MAX_ROSTER;
+  return `<p class="muted">New faces arrive after every bog trip. ${full ? '<b>Your roster is full.</b>' : ''}</p>` +
+    S.board.map(r => {
+      const a = ARCHETYPES[r.arch];
+      return `<div class="card recruit">
+        ${figureSVG(r, 80)}
+        <div>
+          <div class="cname">${esc(r.name)} ${r.grudge ? '<span class="tag red">grudge</span>' : ''}</div>
+          <div class="muted">${a.title} · ${a.origin}</div>
+          <div>${esc(a.personality)}</div>
+          <div class="stats">❤️ ${r.maxDur} · 💪 ${r.power} · 🤸 ${r.agility} · 🫁 ${r.stamina}</div>
+          <div class="small">Likes: ${a.likes.map(giftName).join(', ')}</div>
+          <div class="small fear">Fear: ${esc(a.fearText)}</div>
+          <button class="btn sm" onclick="recruit(${r.id})" ${full ? 'disabled' : ''}>Recruit</button>
+        </div></div>`;
+    }).join('') || '<p class="muted">The board is empty. Go to the bog and come back.</p>';
+}
+
+function craftHTML() {
+  return '<p class="muted">Turn bog materials into gifts. Gifts are permanent (except tonics). Two per champion.</p>' +
+    Object.keys(GIFTS).map(id => {
+      const g = GIFTS[id];
+      const ok = canAfford(g.cost);
+      return `<div class="card craft">
+        <div class="gicon">${g.icon}</div>
+        <div><div class="cname">${g.name} ${S.gifts[id] ? `<span class="tag">have ${S.gifts[id]}</span>` : ''}</div>
+        <div class="small">${g.desc}</div>
+        <button class="btn sm" onclick="craft('${id}')" ${ok ? '' : 'disabled'}>Craft (${costText(g.cost)})</button></div>
+      </div>`;
+    }).join('');
+}
+
+function buildHTML() {
+  return Object.keys(BUILDINGS).map(id => {
+    const b = BUILDINGS[id];
+    const built = S.buildings[id];
+    return `<div class="card craft"><div class="gicon">${b.icon}</div><div>
+      <div class="cname">${b.name} ${built ? '<span class="tag green">built</span>' : ''}</div>
+      <div class="small">${b.desc}</div>
+      ${built ? '' : `<button class="btn sm" onclick="build('${id}')" ${canAfford(b.cost) ? '' : 'disabled'}>Build (${costText(b.cost)})</button>`}
+    </div></div>`;
+  }).join('') + `<div class="card craft"><div class="gicon">🏚️</div><div><div class="cname">Retirement Home <span class="tag green">always open</span></div>
+    <div class="small">Where champions go when their bodies say no. See the Retirement Home tab.</div></div></div>`;
+}
+
+function homeHTML() {
+  const goal = 8;
+  const pct = Math.min(100, S.retirees.length / goal * 100);
+  const list = S.retirees.map((r, i) => `<div class="card recruit">
+      ${figureSVG(r, 70)}
+      <div><div class="cname">${esc(r.name)}</div>
+      <div><span class="tag">${ROLES[r.role].name}</span> <span class="small">${ROLES[r.role].effect}</span></div>
+      <div class="small muted">${r.attempts} attempt(s). ${r.injuries.length} injuries. Kept: ${r.gifts.map(giftName).join(', ') || 'nothing'}.</div>
+      <button class="btn sm" onclick="showInjuries(${100000 + i})">Medical chart</button></div></div>`).join('');
+  return `<div class="small">Residents: ${S.retirees.length}. The home grows with every broken champion.</div>
+    <div class="dbar home"><div class="dfill" style="width:${pct}%;background:#9a7bd0"></div></div>
+    ${list || '<p class="muted">Empty. Clean sheets. Fresh flowers. It will not last.</p>'}`;
+}
+
+// ---------- Actions ----------
+function recruit(id) {
+  if (S.roster.length >= MAX_ROSTER) return;
+  const r = S.board.find(x => x.id === id);
+  S.board = S.board.filter(x => x.id !== id);
+  S.roster.push(r);
+  S.recruitedTotal++;
+  save(); renderHub();
+  narrate(`${r.name} joins you. They have been told what the job is. They signed anyway.`);
+}
+
+function craft(id) {
+  const g = GIFTS[id];
+  if (!canAfford(g.cost)) return;
+  pay(g.cost);
+  S.gifts[id] = (S.gifts[id] || 0) + 1;
+  S.crafted[id] = (S.crafted[id] || 0) + 1;
+  save(); renderHub();
+  narrate(`You craft a ${g.name}. You cannot use it. Nothing you make is for you.`);
+}
+
+function build(id) {
+  const b = BUILDINGS[id];
+  if (!canAfford(b.cost)) return;
+  pay(b.cost);
+  S.buildings[id] = true;
+  save(); renderHub();
+  narrate(`The ${b.name} is built. The village is thriving. On your behalf. Because of you. For your death.`);
+}
+
+function heal(id) {
+  const ch = S.roster.find(c => c.id === id);
+  if (!S.buildings.hospital || ch.dur >= ch.cap) return;
+  if (S.res.glowcap < 1) { narrate('The healers want a Glowcap. They are very clear: no Glowcap, no healing.'); return; }
+  S.res.glowcap--;
+  const amount = 25 + roleCount('healer') * 10;
+  ch.dur = Math.min(ch.cap, ch.dur + amount);
+  save(); renderHub();
+  narrate(`${ch.name} is patched up. Not all the way. Never all the way.`);
+}
+
+function openGiveGift(id) {
+  const ch = S.roster.find(c => c.id === id);
+  const a = ARCHETYPES[ch.arch];
+  const owned = Object.keys(S.gifts).filter(g => S.gifts[g] > 0);
+  const rows = owned.map(g => {
+    const liked = a.likes.includes(g), feared = a.fears.includes(g), has = ch.gifts.includes(g);
+    const note = feared ? '<span class="tag red">refuses</span>' : liked ? '<span class="tag green">loves it</span>' : '<span class="tag">neutral</span>';
+    return `<div class="card craft"><div class="gicon">${GIFTS[g].icon}</div><div>
+      <div class="cname">${GIFTS[g].name} ×${S.gifts[g]} ${note}</div><div class="small">${GIFTS[g].desc}</div>
+      <button class="btn sm" onclick="giveGift(${id},'${g}')" ${feared || has ? 'disabled' : ''}>Give</button></div></div>`;
+  }).join('');
+  openModal(`<h2>🎁 Gift for ${esc(ch.name)}</h2>
+    <p class="small">Likes: ${a.likes.map(giftName).join(', ')}<br><span class="fear">${esc(a.fearText)}</span></p>
+    ${rows || '<p class="muted">You have no crafted gifts. Visit the Craft Bench.</p>'}
+    <button class="btn" onclick="closeModal()">Close</button>`);
+}
+
+function giveGift(id, g) {
+  const ch = S.roster.find(c => c.id === id);
+  if (ch.gifts.length >= 2 || !S.gifts[g]) return;
+  S.gifts[g]--;
+  ch.gifts.push(g);
+  save(); closeModal(); renderHub();
+  const liked = ARCHETYPES[ch.arch].likes.includes(g);
+  narrate(liked ? `${ch.name} loves the ${GIFTS[g].name}. Morale is up. Your odds of dying are up. Everyone wins.`
+                : `${ch.name} accepts the ${GIFTS[g].name} politely.`);
+}
+
+function confirmReset() {
+  openModal(`<h2>Reset everything?</h2><p>This wipes your save. Champions, retirees, journal, all of it.</p>
+    <button class="btn danger" onclick="resetGame();closeModal();goHub('A new life begins. The escape key is still broken.');showIntro()">Yes, wipe it</button>
+    <button class="btn" onclick="closeModal()">Cancel</button>`);
+}
+</script>
+  <script>
+// The Whispering Bog: click resource nodes, beat a boss (by standing there), feed a toad (please don't).
+
+const NODE_TYPES = [
+  { res: 'bogiron',    label: 'Rusty Heap',    icon: '⛓️', line: 'You pull iron from the muck. The muck lets you. Everything lets you.' },
+  { res: 'mossthread', label: 'Hanging Moss',  icon: '🌿', line: 'You harvest moss. A goblin attacks you, hits your thorns, and leaves in an ambulance.' },
+  { res: 'glowcap',    label: 'Glowcaps',      icon: '🍄', line: 'You pick glowing mushrooms. They are for other people. Everything is for other people.' },
+  { res: 'bonedust',   label: 'Old Skeleton',  icon: '💀', line: 'An adventurer who came before you. They got the ending you want. You take their dust.' },
+];
+const SPOTS = [[12, 22], [30, 14], [48, 26], [66, 12], [20, 52], [40, 60], [58, 46], [78, 34], [30, 82], [56, 80], [84, 62]];
+let bog = null;
+
+function goBog() {
+  bog = {
+    nodes: shuffle(SPOTS).slice(0, 9).map(([x, y], i) => ({ i, x, y, type: NODE_TYPES[i % 4], left: true })),
+    bossDone: false, fedToad: false, busy: false,
+  };
+  showScreen('bog');
+  renderBog();
+  placeHero(50, 92, true);
+  narrate('The Whispering Bog. The monsters here have heard about you. They attack anyway. It is a matter of pride.');
+}
+
+function renderBog() {
+  const map = $('bogmap');
+  map.querySelectorAll('.node').forEach(n => n.remove());
+  bog.nodes.forEach(n => {
+    if (!n.left) return;
+    map.insertAdjacentHTML('beforeend',
+      `<button class="node" style="left:${n.x}%;top:${n.y}%" onclick="gatherNode(${n.i})" title="${n.type.label}">${n.type.icon}<span>${n.type.label}</span></button>`);
+  });
+  map.insertAdjacentHTML('beforeend',
+    `<button class="node boss ${bog.bossDone ? 'done' : ''}" style="left:88%;top:12%" onclick="fightBoss()" title="Hag's Hollow">🕳️<span>Hag's Hollow${bog.bossDone ? ' (cleared)' : ''}</span></button>`);
+  const toadSize = 1 + S.toad * 0.25;
+  map.insertAdjacentHTML('beforeend',
+    `<button class="node toad" style="left:8%;top:76%;font-size:${toadSize * 26}px" onclick="feedToad()" title="Grumbling Toad">🐸<span>Grumbling Toad (size ${S.toad + 1})</span></button>`);
+  renderResources();
+}
+
+function placeHero(x, y, instant) {
+  const h = $('bog-hero');
+  if (instant) { h.style.transition = 'none'; void h.offsetWidth; }
+  h.style.left = x + '%'; h.style.top = y + '%';
+  if (instant) { void h.offsetWidth; h.style.transition = ''; }
+}
+
+function walkTo(x, y, then) {
+  if (bog.busy) return;
+  bog.busy = true;
+  placeHero(x, y);
+  setTimeout(() => { bog.busy = false; then(); }, 650);
+}
+
+function gatherNode(i) {
+  const n = bog.nodes[i];
+  if (!n.left) return;
+  walkTo(n.x, n.y, () => {
+    const amount = 1 + rand(2);
+    S.res[n.type.res] += amount;
+    n.left = false;
+    save(); renderBog();
+    narrate(`+${amount} ${RESOURCES[n.type.res].name}. ${n.type.line}`);
+  });
+}
+
+function fightBoss() {
+  if (bog.bossDone) { narrate('The Hag is regrouping. She needs a moment. She needs several moments.'); return; }
+  walkTo(88, 12, () => {
+    bog.bossDone = true;
+    S.res.glasseye += 1;
+    S.res.bonedust += 2;
+    save(); renderBog();
+    narrate("The Bog Hag hurls a curse, then a cauldron, then herself. Your thorns handle all three. She drops a Glass Eye and 2 Bonedust. You did not attack. You never attack.");
+  });
+}
+
+function feedToad() {
+  walkTo(10, 72, () => {
+    if (bog.fedToad) { narrate('The toad is full. It is looking at you the way a dog looks at a person who feeds it.'); return; }
+    if (S.res.glowcap < 1) { narrate('The toad wants a Glowcap. You have none. The toad will remember this.'); return; }
+    S.res.glowcap--;
+    S.toad++;
+    bog.fedToad = true;
+    save(); renderBog();
+    narrate(`You feed the toad a Glowcap. It grows. Toad size: ${S.toad + 1}. This seems fine and will have no consequences.`);
+  });
+}
+
+function leaveBog() {
+  S.trips++;
+  let extra = '';
+  for (let k = 0; k < roleCount('shopkeeper'); k++) {
+    const r = pick(['bogiron', 'mossthread', 'glowcap', 'bonedust']);
+    S.res[r]++;
+    extra = ' Your retired shopkeeper slips you some extra stock.';
+  }
+  refreshBoard();
+  save();
+  goHub('You return to the village. New recruits are waiting on the board.' + extra);
+}
+</script>
+  <script>
+// The arena: set up an attempt, play it out beat by beat, log the failure, apply injuries.
+
+let setup = { champ: null, arena: 'pit' };
+let fight = null;
+
+function goArenaSetup() {
+  if (!S.roster.length) return;
+  if (!setup.champ || !S.roster.find(c => c.id === setup.champ)) setup.champ = S.roster[0].id;
+  showScreen('setup');
+  renderSetup();
+  narrate('Choose who will try to kill you today, and where. You will be there. You are always there.');
+}
+
+function renderSetup() {
+  $('setup-champs').innerHTML = S.roster.map(ch => `
+    <button class="pick ${setup.champ === ch.id ? 'on' : ''}" onclick="setup.champ=${ch.id};renderSetup()">
+      ${figureSVG(ch, 80)}<div><b>${esc(ch.name)}</b><br><span class="small">${ch.gifts.map(g => GIFTS[g].icon).join(' ') || 'no gifts'}</span>
+      <div class="dbar mini"><div class="dfill" style="width:${Math.max(0, ch.dur) / ch.maxDur * 100}%"></div></div></div>
+    </button>`).join('');
+  $('setup-arenas').innerHTML = Object.keys(ARENAS).map(id => `
+    <button class="pick arena-${id} ${setup.arena === id ? 'on' : ''}" onclick="setup.arena='${id}';renderSetup()">
+      <b>${ARENAS[id].name}</b><br><span class="small">${ARENAS[id].desc}</span></button>`).join('');
+}
+
+// ---------- The simulation ----------
+function effectiveStats(ch, arenaId) {
+  const a = ARCHETYPES[ch.arch];
+  const has = id => ch.gifts.includes(id);
+  const injured = id => ch.injuries.some(i => i.id === id);
+  const s = {
+    power: ch.power, agility: ch.agility, stamina: ch.stamina + roleCount('veteran'),
+    ranged: !!a.ranged || has('bow'), heavy: !!a.heavy, summoner: !!a.summoner,
+    angles: has('monocle'), tear: 0, drain: 1,
+    morale: ch.gifts.filter(g => a.likes.includes(g)).length,
+  };
+  if (has('greatsword')) { s.power += 4; s.drain += 1; if (ch.power < 6) s.tear += 1; }
+  if (has('boots')) s.agility += 4;
+  if (has('tonic')) { s.stamina += 6; s.tear += ch.arch === 'paladin' ? 0.5 : 1.2; }
+  if (s.heavy) s.drain += 1;
+  if (arenaId === 'dunes') s.drain += s.heavy ? 2 : 1;
+  if (injured('legCast')) s.agility -= 2;
+  if (injured('cane')) s.agility -= 1;
+  if (injured('armCast')) s.power -= 2;
+  s.agility = Math.max(1, s.agility);
+  s.power = Math.max(1, s.power);
+  s.aimPenalty = injured('eyepatch') ? 0.2 : 0;
+  return s;
+}
+
+// Weighted table of what happens in one beat. "flavor" means the fight goes on.
+function eventTable(s, arenaId) {
+  const t = [];
+  const add = (id, w) => { if (w > 0) t.push({ id, w: id === 'flavor' || id === 'win' ? w : w * (1 - 0.12 * s.morale) }); };
+  add('flavor', 3);
+  if (s.ranged) {
+    add('ricochet', 1.6 + s.aimPenalty * 5);
+  } else {
+    add('thorns', s.power * 0.25);
+    add('grab', s.heavy ? 0.9 : 0.4);
+    add('swordSlip', Math.max(0, 8 - s.agility) * 0.18 + (arenaId === 'pit' ? 1.2 : 0));
+    add('capeTrip', Math.max(0, 8 - s.agility) * 0.2);
+    add('armorBounce', s.agility >= 7 ? 1.8 : 0.2);
+  }
+  if (arenaId === 'library') {
+    add('shelf', 0.7);
+    if (s.ranged && !s.angles) add('chandelier', 1.4);
+    if (s.ranged && s.angles) add('win', 2 + s.morale);
+  }
+  if (s.summoner) add('summonBetrayal', 1.6);
+  if (s.tear) add('tornMuscle', s.tear);
+  if (S.toad >= 2) add('toad', (S.toad - 1) * 0.35);
+  return t;
+}
+
+function rollEvent(table) {
+  let total = table.reduce((a, e) => a + e.w, 0), r = Math.random() * total;
+  for (const e of table) { if ((r -= e.w) <= 0) return e.id; }
+  return 'flavor';
+}
+
+function flavorLine(ch, s, arenaId) {
+  const n = ch.name;
+  const lines = s.ranged
+    ? [`${n} fires an arrow. It bounces off harmlessly and lands in the stands. A spectator keeps it.`,
+       `${n} lines up a shot, apologises to you, and fires. Your regen fixes the scratch before the apology ends.`]
+    : [`${n} lands a clean hit. Your regen undoes it before the sound arrives.`,
+       `${n} swings again. Your health bar flickers, briefly, out of politeness.`,
+       `${n} circles you, looking for a weak spot. You helpfully stand still. There is no weak spot.`];
+  if (s.angles && arenaId !== 'library') lines.push(`${n} peers through the monocle and sees many clever angles. None of them lead to anything heavy above your head. This arena is too sensible.`);
+  if (s.angles && arenaId === 'library' && !s.ranged) lines.push(`${n} spots the perfect angle: the chandelier chain above you. It is twenty feet up. ${n} has nothing that reaches.`);
+  if (s.summoner) lines.push(`${n} summons a small imp, which bows to the crowd. The crowd is mostly retirees. They do not clap.`);
+  if (arenaId === 'dunes') lines.push(`The sun beats down. ${n} sweats. You do not. Your regen covers sunburn too.`);
+  if (S.retirees.some(r => r.role === 'heckler') && Math.random() < 0.5) return pick(HECKLES);
+  return pick(lines);
+}
+
+function simulate(ch, arenaId) {
+  const s = effectiveStats(ch, arenaId);
+  const beats = [];
+  let stamina = s.stamina;
+  for (let i = 0; i < 10; i++) {
+    stamina -= s.drain;
+    if (stamina < 0) {
+      const id = arenaId === 'dunes' && (s.heavy || ch.gifts.includes('greatsword')) ? 'overheat' : 'exhaustion';
+      return { s, beats, end: id };
+    }
+    let ev = rollEvent(eventTable(s, arenaId));
+    if (ev === 'win') {
+      if (Math.random() < 0.5 + 0.1 * s.morale - s.aimPenalty) return { s, beats, end: 'win' };
+      beats.push(`${ch.name} aims at the chain above you... and misses by an inch. Everyone in the stands gasps. You gasp hardest.`);
+      continue;
+    }
+    if (ev === 'flavor') { beats.push(flavorLine(ch, s, arenaId)); continue; }
+    return { s, beats, end: ev };
+  }
+  return { s, beats, end: 'exhaustion' };
+}
+
+// ---------- Playback ----------
+function startAttempt() {
+  const ch = S.roster.find(c => c.id === setup.champ);
+  if (!ch) return;
+  const result = simulate(ch, setup.arena);
+  fight = { ch, arena: setup.arena, result, step: 0, timer: null };
+  showScreen('arena');
+  const stage = $('stage');
+  stage.className = 'stage arena-' + setup.arena;
+  const props = setup.arena === 'library'
+    ? `<div class="shelf s1"></div><div class="shelf s2"></div><div class="chand" id="chand-a" style="left:28%">🕯️💡🕯️</div><div class="chand" id="chand-b" style="left:68%">🕯️💡🕯️</div>`
+    : setup.arena === 'pit' ? '<div class="puddle p1"></div><div class="puddle p2"></div>' : '<div class="sun">☀️</div>';
+  const crowd = S.retirees.slice(-6).map(r => `<span title="${esc(r.name)}">${figureSVG(r, 34)}</span>`).join('');
+  stage.innerHTML = `${props}<div class="stands">${crowd}</div>
+    <div id="f-champ" class="actor champ-actor">${figureSVG(ch, 120)}</div>
+    <div id="f-hero" class="actor hero-actor">${heroSVG(170)}</div>`;
+  $('fightlog').innerHTML = '';
+  $('fight-title').textContent = `${ch.name} vs. You — ${ARENAS[setup.arena].name}`;
+  $('fight-next').style.display = 'none';
+  $('fight-skip').style.display = '';
+  narrate(pick(['The crowd settles in. The retirees in the stands have seen this before.', 'Somewhere, a save file holds its breath.', 'You stand perfectly still. It is the only move you know.']));
+  logLine(`<i>The arena falls silent. ${esc(ch.name)} steps forward. You stand there. You are very good at standing there.</i>`);
+  fight.timer = setInterval(stepFight, 1300);
+}
+
+function logLine(html, cls) {
+  const el = document.createElement('div');
+  el.className = 'logline ' + (cls || '');
+  el.innerHTML = html;
+  $('fightlog').appendChild(el);
+  $('fightlog').scrollTop = 1e6;
+}
+
+function anim(id, cls) {
+  const el = $(id);
+  if (!el) return;
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+}
+
+function stepFight() {
+  const f = fight;
+  if (f.step < f.result.beats.length) {
+    anim('f-champ', 'lunge'); anim('f-hero', 'tink');
+    logLine(esc(f.result.beats[f.step]));
+    f.step++;
+    return;
+  }
+  clearInterval(f.timer);
+  finishFight();
+}
+
+function skipFight() {
+  if (!fight || fight.done) return;
+  clearInterval(fight.timer);
+  while (fight.step < fight.result.beats.length) logLine(esc(fight.result.beats[fight.step++]));
+  finishFight();
+}
+
+function finishFight() {
+  const f = fight;
+  if (f.done) return;
+  f.done = true;
+  $('fight-skip').style.display = 'none';
+  const ch = f.ch;
+  ch.attempts++;
+  S.attempts++;
+  const giftsText = ch.gifts.map(g => GIFTS[g].name).join(' + ') || 'no gifts';
+
+  if (f.result.end === 'win') {
+    anim('f-champ', 'lunge');
+    const b = $('chand-b'); if (b) b.classList.add('fall');
+    logLine(`${esc(ch.name)} adjusts the monocle, ignores you completely, and shoots the chain above your head. The arrow does not touch you. Your thorns have nothing to reflect.`, 'big');
+    setTimeout(() => { anim('f-hero', 'down'); logLine('The chandelier lands on you. Thorns do not work on chandeliers. Regen does not work fast enough on chandeliers.', 'big'); }, 900);
+    setTimeout(() => logLine('<b>You have been knocked out.</b> Somewhere, a save icon begins to spin.', 'win'), 2200);
+    S.journal.push({ n: S.attempts, champ: ch.name, arena: ARENAS[f.arena].name, failure: 'SUCCESS', cat: 'Victory', text: 'The chandelier above you finally fell.', lesson: 'Indirect damage ignores thorns. It took a village.', gifts: giftsText, win: true });
+    S.won = true;
+    S.winInfo = { champ: ch.name, arch: ch.arch, gifts: giftsText, arena: ARENAS[f.arena].name };
+    save();
+    setTimeout(() => startEnding(), 4200);
+    return;
+  }
+
+  const fail = FAILURES[f.result.end];
+  let dmg = fail.dmg;
+  if (f.result.end === 'thorns') dmg = Math.round(8 + f.result.s.power * 2.5);
+  if (f.result.end === 'armorBounce') dmg = Math.round(10 + f.result.s.agility * 2);
+  if (f.result.end === 'toad') dmg = 12 + S.toad * 4;
+  if (f.result.end === 'exhaustion' && f.result.s.heavy) dmg += 6;
+  dmg = Math.round(dmg * (0.85 + Math.random() * 0.3));
+
+  // Injury: new one, or an old one gets worse
+  const injId = pick(fail.injuries);
+  const existing = ch.injuries.find(i => i.id === injId);
+  let injury;
+  if (existing) { existing.sev++; existing.name = INJURIES[injId].name + ' (again)'; injury = existing; }
+  else { injury = Object.assign({ id: injId }, INJURIES[injId]); ch.injuries.push(injury); }
+  S.injuriesDealt++;
+  ch.cap = Math.max(0, ch.cap - injury.sev * 4);
+  ch.dur = Math.min(ch.cap, ch.dur - dmg);
+
+  const lines = f.result.end === 'exhaustion' && f.result.s.heavy ? fail.sleepyLines : fail.lines;
+  const text = pick(lines).replace(/\{n\}/g, ch.name);
+  anim('f-champ', ['thorns', 'ricochet', 'armorBounce', 'grab'].includes(f.result.end) ? 'knock' : 'collapse');
+  if (f.result.end === 'chandelier') { const a = $('chand-a'); if (a) a.classList.add('fall'); }
+  if (f.result.end === 'shelf') { const s = document.querySelector('.shelf.s1'); if (s) s.classList.add('topple'); }
+  logLine(esc(text), 'big');
+
+  const retired = ch.dur <= 0 || ch.cap <= 10;
+  S.journal.push({ n: S.attempts, champ: ch.name, arena: ARENAS[f.arena].name, failure: fail.name, cat: fail.cat, text, lesson: fail.lesson, injury: injury.name, dmg, gifts: giftsText });
+
+  // Tonics get used up
+  if (ch.gifts.includes('tonic')) ch.gifts = ch.gifts.filter(g => g !== 'tonic');
+
+  let summary = `<div class="result"><div class="row">${figureSVG(ch, 110)}<div>
+    <div class="cname">${esc(ch.name)} is knocked out: ${fail.name}</div>
+    <div>Injury: <b>${esc(injury.name)}</b> (severity ${injury.sev}). Durability lost: <b>${dmg}</b>.</div>
+    ${durabilityBar(ch)}
+    <div class="lesson">📝 Journal: ${esc(fail.lesson)}</div></div></div>`;
+  if (retired) {
+    const r = retireChampion(ch);
+    summary += `<div class="retire">🏚️ ${esc(pick(RETIRE_LINES).replace(/\{n\}/g, ch.name))}<br>
+      They become a <b>${ROLES[r.role].name}</b> in the village. ${ROLES[r.role].effect}</div>`;
+  }
+  summary += '</div>';
+  save();
+  setTimeout(() => {
+    logLine(summary);
+    logLine('<i>You remain at full health. You were always going to remain at full health.</i>');
+    $('fight-next').style.display = '';
+  }, 700);
+}
+
+function leaveArena() {
+  fight = null;
+  goHub(S.roster.length ? 'Back to the village. The hospital wing has the kettle on.' : 'Your roster is empty. The Recruit Board awaits fresh optimism.');
+}
+
+// ---------- The ending ----------
+function startEnding() {
+  showScreen('ending');
+  const e = $('ending');
+  e.className = 'ending';
+  e.innerHTML = '<div class="savetext" id="savetext"></div>';
+  const steps = ['Saving...', 'Saving...', 'Save complete.', 'Exiting game...'];
+  steps.forEach((t, i) => setTimeout(() => { $('savetext').textContent = t; }, 900 * (i + 1)));
+  setTimeout(() => { e.innerHTML = '<div class="crt"></div>'; }, 4600);
+  setTimeout(() => { e.innerHTML = ''; }, 6200);
+  setTimeout(showCredits, 8000);
+}
+
+function showCredits() {
+  const w = S.winInfo || {};
+  const retirees = S.retirees.map(r => `<li>${esc(r.name)}: ${ROLES[r.role].name}</li>`).join('') || '<li>No one retired. Somehow.</li>';
+  const crafted = Object.keys(S.crafted).map(g => `<li>${S.crafted[g]} × ${GIFTS[g].name}</li>`).join('') || '<li>Nothing</li>';
+  const toad = S.toad >= 4 ? 'The Bog Toad is now a regional power with its own flag.' : S.toad >= 1 ? `The Bog Toad grew to size ${S.toad + 1}. It misses you.` : 'The Bog Toad remains a normal toad. Well done.';
+  $('ending').innerHTML = `<div class="credits"><div class="roll">
+    <h1>Please Kill Me (Politely)</h1>
+    <p>Final blow: <b>${esc(w.champ || 'someone')}</b>, with ${esc(w.gifts || 'determination')}, in ${esc(w.arena || 'an arena')}. Mostly the chandelier.</p>
+    <h3>What your gifts built</h3>
+    <p>${S.recruitedTotal} champions recruited · ${S.attempts} attempts · ${S.injuriesDealt} injuries · ${S.trips} bog trips</p>
+    <h3>The Retirement Home</h3><ul>${retirees}</ul>
+    <h3>Gifts Crafted</h3><ul>${crafted}</ul>
+    <h3>The World You Left Behind</h3>
+    <p>${S.buildings.hospital ? 'The Hospital Wing is the busiest in the realm.' : 'The village never built a hospital. Bold.'}
+    ${S.buildings.academy ? ' The Academy teaches a course called "Not Hitting Him Directly 101".' : ''}</p>
+    <p>${toad}</p>
+    <p class="muted">The computer had a power button the whole time.<br>You never once looked at it.</p>
+    <p>Thanks for playing.</p>
+    <button class="btn big" onclick="resetGame();goHub('You wake up. New game. The escape key is still broken.');showIntro()">Start a new life</button>
+  </div></div>`;
+}
+</script>
+  <script>
+    loadGame();
+    $('hub-hero').innerHTML = heroSVG(80);
+    if (S.won) { showScreen('ending'); showCredits(); }
+    else goHub();
+    if (!S.seenIntro) { S.seenIntro = true; save(); showIntro(); }
+  </script>
+</body>
+</html>

@@ -5,7 +5,7 @@ A small playable slice of a dark-comedy RPG. You play the most overpowered chara
 ## How to run it
 
 1. Download this repository. On GitHub, click **Code → Download ZIP**, then unzip it.
-2. Open the folder and double-click **`index.html`**.
+2. Open the folder and double-click **`play.html`** (the whole game in one file). `index.html` works too.
 3. The game opens in your web browser. Nothing needs to be installed.
 
 Your progress saves in your browser automatically. Use the **Reset** button at the top to start over.
