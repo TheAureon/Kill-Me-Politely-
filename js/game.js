@@ -13,6 +13,8 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 function uid() { return S.nextUid++; }
+const an = word => (/^[aeiou]/i.test(word) ? 'an ' : 'a ') + word;
+const MAX_BUFF = 3; // monsters in a region can only get so strong
 
 function say(text, cls = '') {
   S.feed.unshift({ day: S.day, text, cls });
@@ -256,7 +258,7 @@ function craft(key) {
   pay(ITEMS[key].cost);
   S.inventory.push({ uid: uid(), key });
   S.stats.crafted++;
-  say(`You craft a ${ITEMS[key].name}. You cannot use it. It is not for you. Nothing is.`);
+  say(`You craft ${an(ITEMS[key].name)}. You cannot use it. It is not for you. Nothing is.`);
 }
 
 // Returns a message describing what happened.
@@ -285,12 +287,11 @@ function gift(champId, itemUid) {
   let reaction = 'They nod.';
   if (def.tags.includes(c.likes)) reaction = `They love it. (${c.likes}!) Morale up.`;
   else if (def.tags.includes(c.dislikes)) reaction = `They hate it. (${c.dislikes}.) Morale down, but they'll carry it.`;
-  say(`You gift ${c.name} a ${def.icon} ${def.name}. ${reaction}`);
-  // consequence: monsters armed with your gear make their kin stronger
-  if (RACES[c.race].monster && (def.forge >= 2 || (def.power || 0) >= 90 || (def.guard || 0) >= 40)) {
-    const r = S.regions[c.home];
-    r.buffed++;
-    addConsequence(`${REGIONS[c.home].name}: ${c.name}'s cousins borrowed the ${def.name} to copy it. The monsters there are stronger now (level ${r.buffed}).`);
+  say(`You gift ${c.name} ${an(def.name)} ${def.icon}. ${reaction}`);
+  // consequence: a monster armed with your gear makes its kin stronger (once per champion)
+  if (RACES[c.race].monster && !c.armedKin && (def.forge >= 2 || (def.power || 0) >= 90 || (def.guard || 0) >= 40)) {
+    c.armedKin = true;
+    buffRegion(c.home, `${c.name}'s cousins borrowed the ${def.name} to copy it.`);
   }
 }
 function takeBack(champId, itemUid) {
@@ -302,6 +303,12 @@ function takeBack(champId, itemUid) {
   say(`You take back the ${ITEMS[S.inventory[S.inventory.length - 1].key].name}. ${c.name} pretends not to be hurt.`);
 }
 
+function buffRegion(regionId, why) {
+  const r = S.regions[regionId];
+  if (r.buffed >= MAX_BUFF) return;
+  r.buffed++;
+  addConsequence(`${REGIONS[regionId].name}: ${why} The monsters there are stronger now (level ${r.buffed}). They may crash your arena fights.`);
+}
 function addConsequence(text) {
   S.consequences.push({ day: S.day, text });
   say(`🌍 ${text}`, 'world');
@@ -362,8 +369,7 @@ function retire(champId, role) {
     r.rebellionUntil = S.day + 6;
     addConsequence(`${c.name} told everyone in ${reg.recruit.place} about the gifts they hated. A rebellion breaks out. No recruiting there until day ${r.rebellionUntil}.`);
   } else if (RACES[c.race].monster && allGear(c).length >= 2) {
-    r.buffed++;
-    addConsequence(`${c.name} went home to ${reg.name} and shared all your gear with the family. The monsters there are stronger (level ${r.buffed}).`);
+    buffRegion(c.home, `${c.name} went home and shared all your gear with the family.`);
   }
   if (role === 'vengeful') {
     S.pendingReturns.push({ id: c.id, day: S.day + randInt(4, 7) });

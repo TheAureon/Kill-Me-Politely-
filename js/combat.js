@@ -13,6 +13,12 @@ const CAUSE_CATEGORY = {
   timeout: 'Out of time',
 };
 
+const CAUSE_LABEL = {
+  trip: 'tripping on your cape', slip: 'slipping onto your sword', bounce: 'bouncing off your armor', chandelier: 'falling chandelier',
+  shelves: 'falling bookshelf', rocks: 'falling rock', fear: 'panicking', summon: 'own summon turning on them', backflip: 'botched backflip',
+  collapse: 'collapsing in heavy armor',
+};
+
 // Works out every number for a fight before it starts.
 function fightSetup(c, arenaId) {
   const A = ARENAS[arenaId];
@@ -138,12 +144,12 @@ function simulateAttempt(c, arenaId) {
 
   // ---- opening moves ----
   const buffedRegions = Object.entries(S.regions).filter(([, r]) => r.buffed > 0);
-  if (!F.ally) for (const [rid, r] of buffedRegions) {
-    if (rnd() < Math.min(0.3, 0.05 * r.buffed)) {
-      const t = `A monster from ${REGIONS[rid].name}, wearing gear you once gifted, wanders into the arena and attacks the nearest person. It is not you. It is never you.`;
-      log(t, 'ko');
-      return end('ko', 'monster', 3, t, `Monsters you buffed in ${REGIONS[rid].name} crash fights. A Monster Whistle would make one fight for you instead.`, 0);
-    }
+  const totalBuff = buffedRegions.reduce((t, [, r]) => t + r.buffed, 0);
+  if (!F.ally && totalBuff && rnd() < Math.min(0.15, 0.03 * totalBuff)) {
+    const rid = pick(buffedRegions)[0];
+    const t = `A monster from ${REGIONS[rid].name}, wearing gear you once gifted, wanders into the arena and attacks the nearest person. It is not you. It is never you.`;
+    log(t, 'ko');
+    return end('ko', 'monster', 3, t, `Monsters you buffed in ${REGIONS[rid].name} crash fights. A Monster Whistle would make one fight for you instead.`, 0);
   }
   if (F.ally) log(`📯 ${n} blows the Monster Whistle. A beefed-up monster from ${REGIONS[F.ally.region].name} lumbers in and takes aim at you from a safe distance.`, 'big');
   if (P.hug && F.melee) {
@@ -276,8 +282,9 @@ function resolveAttempt(c, res) {
     category: CAUSE_CATEGORY[res.cause], text: res.text, lesson: res.lesson,
     injury: injury ? `${injury.icon} ${injury.name}${injury.sev >= 4 ? ' (crippling)' : ''}` : null, damage: res.damage,
   });
+  const retire = needsRetirement(c); // checked before the overnight rest
   endDay();
-  return { injury, retire: needsRetirement(c) };
+  return { injury, retire };
 }
 
 // The Bitter Veteran's forecast: chance of each failure over the whole fight.
@@ -286,16 +293,18 @@ function forecast(c, arenaId) {
   const out = [];
   if (F.melee && F.reflect > F.guard) out.push({ p: 1, text: `Thorns: reflection ${F.reflect} beats guard ${F.guard}. Certain knockout in round 1.` });
   if (F.P.hug && F.melee && !F.has('gauntlets') && F.power * F.thorns * 2 > F.guard) out.push({ p: 1, text: 'The opening hug will end them. Gauntlets, please.' });
+  const totalBuff = Object.values(S.regions).reduce((t, r) => t + r.buffed, 0);
+  if (!F.ally && totalBuff) out.push({ p: Math.min(0.15, 0.03 * totalBuff), text: 'A monster you buffed earlier crashes the fight' });
   if (F.has('tearRisk')) out.push({ p: 0.35 * (F.st.END >= 7 ? 0.3 : 1), text: 'Berserker Tonic might tear a muscle.' });
   const rounds = F.rounds;
   for (const [cause, p] of roundHazards(c, F)) {
     if (p <= 0) continue;
     const total = 1 - Math.pow(1 - p, rounds);
-    out.push({ p: total, text: `${CAUSE_CATEGORY[cause]}: ${cause} (${Math.round(p * 100)}% per round)` });
+    out.push({ p: total, text: `${CAUSE_CATEGORY[cause]}: ${CAUSE_LABEL[cause] || cause} (${Math.round(p * 100)}% per round)` });
   }
   if (F.ranged) {
     const rp = F.has('noRicochet') ? 0.03 : Math.max(0.05, 0.3 - F.st.WIT * 0.025);
-    if (F.power * 0.6 > F.guard * 0.8) out.push({ p: 1 - Math.pow(1 - rp, rounds), text: `Ricochet (${Math.round(rp * 100)}% per round)` });
+    if (F.power * 0.6 > F.guard * 0.8) out.push({ p: 1 - Math.pow(1 - rp, rounds), text: `Thorns: own projectile ricochets back (${Math.round(rp * 100)}% per round)` });
   }
   const perRound = F.directDmg + F.summonDmg + (F.ally ? F.ally.dmg : 0) + F.poison - F.regen;
   const projected = Math.max(0, F.trap + F.rigging * (rounds >= 3 ? 1 : 0) + perRound * rounds);
