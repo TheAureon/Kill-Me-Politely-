@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Please Kill Me (Politely)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">☠️ Please Kill Me <span>(Politely)</span></div>
+    <div id="resources" class="resources"></div>
+    <div class="topbtns">
+      <button class="btn sm" onclick="showJournal()">📖 Journal</button>
+      <button class="btn sm" onclick="showIntro()">❔ Help</button>
+      <button class="btn sm ghost" onclick="confirmReset()">Reset</button>
+    </div>
+  </header>
+
+  <div id="narrator" class="narrator"></div>
+
+  <!-- HUB -->
+  <main id="screen-hub" class="screen">
+    <div class="hubhead">
+      <div class="youbox">
+        <div id="hub-hero"></div>
+        <div>
+          <div class="cname">You. The Unkillable.</div>
+          <div class="small">❤️ 99,999 / 99,999 · 🛡️ Best armor · ✨ Regen (always on) · 🌵 Thorns<br>
+          🩹 Curse of Duct Tape: nothing comes off. 🚫 You never attack.</div>
+        </div>
+      </div>
+      <div class="bigbtns">
+        <button class="btn big" onclick="goBog()">🌿 Go to the Bog</button>
+        <button class="btn big red" id="stage-btn" onclick="goArenaSetup()">⚔️ Stage an Attempt</button>
+      </div>
+    </div>
+    <div class="hubgrid">
+      <section id="roster" class="panel"></section>
+      <section class="panel">
+        <div class="tabs">
+          <button class="tab" data-tab="recruit" onclick="setTab('recruit')">📋 Recruit Board</button>
+          <button class="tab" data-tab="craft" onclick="setTab('craft')">🔨 Craft Bench</button>
+          <button class="tab" data-tab="build" onclick="setTab('build')">🏗️ Buildings</button>
+          <button class="tab" data-tab="home" onclick="setTab('home')">🏚️ Retirement Home</button>
+        </div>
+        <div id="tabbody"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- BOG -->
+  <main id="screen-bog" class="screen">
+    <div class="screenhead">
+      <h2>🌿 The Whispering Bog</h2>
+      <span class="small">Click things to gather them. The Hollow has a boss. The toad is hungry.</span>
+      <button class="btn" onclick="leaveBog()">🏠 Return to Village</button>
+    </div>
+    <div id="bogmap" class="bogmap"><div id="bog-hero" class="bog-hero">🛡️</div></div>
+  </main>
+
+  <!-- ARENA SETUP -->
+  <main id="screen-setup" class="screen">
+    <div class="screenhead">
+      <h2>⚔️ Stage an Attempt</h2>
+      <button class="btn" onclick="goHub()">Back</button>
+    </div>
+    <h3>Who tries?</h3>
+    <div id="setup-champs" class="picks"></div>
+    <h3>Where?</h3>
+    <div id="setup-arenas" class="picks"></div>
+    <button class="btn big red" onclick="startAttempt()">Begin. (You will not fight back.)</button>
+  </main>
+
+  <!-- ARENA FIGHT -->
+  <main id="screen-arena" class="screen">
+    <div class="screenhead">
+      <h2 id="fight-title"></h2>
+      <button class="btn" id="fight-skip" onclick="skipFight()">Skip ⏩</button>
+      <button class="btn big" id="fight-next" onclick="leaveArena()">Back to Village</button>
+    </div>
+    <div id="stage" class="stage"></div>
+    <div id="fightlog" class="fightlog"></div>
+  </main>
+
+  <!-- ENDING -->
+  <main id="screen-ending" class="screen"><div id="ending" class="ending"></div></main>
+
+  <div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div id="modal-body" class="modal-body"></div></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/hub.js"></script>
+  <script src="js/gather.js"></script>
+  <script src="js/arena.js"></script>
+  <script>
+    loadGame();
+    $('hub-hero').innerHTML = heroSVG(80);
+    if (S.won) { showScreen('ending'); showCredits(); }
+    else goHub();
+    if (!S.seenIntro) { S.seenIntro = true; save(); showIntro(); }
+  </script>
+</body>
+</html>
